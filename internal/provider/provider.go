@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/multani/terraform-provider-incidentio/incidentio"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -31,11 +33,13 @@ type provider struct {
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
 	version string
+
+	client *incidentio.Client
 }
 
 // providerData can be used to store data from the Terraform configuration.
 type providerData struct {
-	Example types.String `tfsdk:"example"`
+	ApiKey types.String `tfsdk:"api_key"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
@@ -53,12 +57,19 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	// If the upstream provider SDK or HTTP client requires configuration, such
 	// as authentication or logging, this is a great opportunity to do so.
 
+	client, err := incidentio.NewClient(data.ApiKey.Value)
+	if err != nil {
+		resp.Diagnostics.AddError("Provider Error", fmt.Sprintf("Unable to create Incident.io client, got error: %s", err))
+		return
+	}
+	p.client = client
+
 	p.configured = true
 }
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
-		"scaffolding_example": exampleResourceType{},
+		"incidentio_incident_role": incidentRoleType{},
 	}, nil
 }
 
@@ -71,9 +82,9 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"example": {
-				MarkdownDescription: "Example provider attribute",
-				Optional:            true,
+			"api_key": {
+				MarkdownDescription: "API key",
+				Required:            true,
 				Type:                types.StringType,
 			},
 		},
