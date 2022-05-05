@@ -3,12 +3,10 @@ package provider
 import (
 	"fmt"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccExampleResource(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	/* resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -40,7 +38,7 @@ func TestAccExampleResource(t *testing.T) {
 			},
 			// Delete testing automatically occurs in TestCase
 		},
-	})
+	}) */
 }
 
 func testAccExampleResourceConfig(configurableAttribute string) string {

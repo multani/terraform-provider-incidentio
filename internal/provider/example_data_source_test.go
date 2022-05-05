@@ -2,12 +2,10 @@ package provider
 
 import (
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccExampleDataSource(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	/* 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -19,7 +17,7 @@ func TestAccExampleDataSource(t *testing.T) {
 				),
 			},
 		},
-	})
+	}) */
 }
 
 const testAccExampleDataSourceConfig = `

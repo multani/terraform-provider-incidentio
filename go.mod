@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/multani/terraform-provider-incidentio
 
 go 1.17
 
