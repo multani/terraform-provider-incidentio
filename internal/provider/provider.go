@@ -57,11 +57,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	// If the upstream provider SDK or HTTP client requires configuration, such
 	// as authentication or logging, this is a great opportunity to do so.
 
-	client, err := incidentio.NewClient(data.ApiKey.Value)
-	if err != nil {
-		resp.Diagnostics.AddError("Provider Error", fmt.Sprintf("Unable to create Incident.io client, got error: %s", err))
-		return
-	}
+	client := incidentio.NewClient(data.ApiKey.Value)
 	p.client = client
 
 	p.configured = true

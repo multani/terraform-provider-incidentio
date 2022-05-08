@@ -1,12 +1,9 @@
 package incidentio
 
-import "encoding/json"
-
-type IncidentIOError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	// {"source":{"field":"","pointer":"shortform"}}
-}
+import (
+	"encoding/json"
+	"strings"
+)
 
 type IncidentIOErrorResponse struct {
 	Type      string            `json:"type"`
@@ -15,17 +12,36 @@ type IncidentIOErrorResponse struct {
 	Errors    []IncidentIOError `json:"errors"`
 }
 
-func NewErrors(body []byte) (*IncidentIOErrorResponse, error) {
-	response := &IncidentIOErrorResponse{}
-	err := json.Unmarshal(body, &response)
+type IncidentIOError struct {
+	Code    string      `json:"code"`
+	Message string      `json:"message"`
+	Source  SourceError `json:"source"`
+}
+
+type SourceError struct {
+	Field   string `json:"field"`
+	Pointer string `json:"pointer"`
+}
+
+func NewErrors(body []byte) error {
+	errorResponse := &IncidentIOErrorResponse{}
+	err := json.Unmarshal(body, &errorResponse)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return response, nil
+	return errorResponse
 
 }
 
 func (e *IncidentIOErrorResponse) Error() string {
-	return e.Type
+	var builder strings.Builder
+
+	builder.WriteString(e.Type + ": ")
+
+	for _, err := range e.Errors {
+		builder.WriteString(err.Code + ":" + err.Message)
+	}
+
+	return builder.String()
 }

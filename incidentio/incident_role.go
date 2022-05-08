@@ -82,11 +82,7 @@ func (i *IncidentRoles) Create(role IncidentRole) (*IncidentRoleResponse, error)
 	}
 
 	if res.StatusCode != http.StatusCreated {
-		errRep, err := NewErrors(body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errRep
+		return nil, NewErrors(body)
 	}
 
 	response := &IncidentRoleResponse{}
@@ -109,9 +105,13 @@ func (i *IncidentRoles) Update(id string, role IncidentRole) (*IncidentRoleRespo
 		return nil, err
 	}
 
-	_, body, err := i.client.doRequest(request)
+	res, body, err := i.client.doRequest(request)
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, NewErrors(body)
 	}
 
 	response := &IncidentRoleResponse{}
