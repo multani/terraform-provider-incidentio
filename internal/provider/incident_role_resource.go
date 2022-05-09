@@ -26,7 +26,7 @@ func (t incidentRoleType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
 				Computed:            true,
-				MarkdownDescription: "Example identifier",
+				MarkdownDescription: "Unique identifier for the role",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					tfsdk.UseStateForUnknown(),
 				},

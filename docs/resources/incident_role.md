@@ -25,6 +25,6 @@ Configure an incident role
 
 ### Read-Only
 
-- `id` (String) Example identifier
+- `id` (String) Unique identifier for the role
 
 
