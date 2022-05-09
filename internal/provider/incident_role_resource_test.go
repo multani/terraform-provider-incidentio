@@ -20,7 +20,7 @@ func TestAccIncidentRoleResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccExampleResourceConfig("role 1", false),
+				Config: testAccIncidentRoleResourceConfig("role 1", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("incidentio_incident_role.test", "name", "role 1"),
 					resource.TestCheckResourceAttr("incidentio_incident_role.test", "required", "false"),
@@ -39,7 +39,7 @@ func TestAccIncidentRoleResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccExampleResourceConfig("role two", true),
+				Config: testAccIncidentRoleResourceConfig("role two", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("incidentio_incident_role.test", "name", "role two"),
 					resource.TestCheckResourceAttr("incidentio_incident_role.test", "required", "true"),
@@ -50,7 +50,7 @@ func TestAccIncidentRoleResource(t *testing.T) {
 	})
 }
 
-func testAccExampleResourceConfig(name string, required bool) string {
+func testAccIncidentRoleResourceConfig(name string, required bool) string {
 	return fmt.Sprintf(`
 	resource "random_string" "short_form" {
 		length  = 12
