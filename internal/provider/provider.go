@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -17,12 +18,10 @@ var _ tfsdk.Provider = &provider{}
 // provider satisfies the tfsdk.Provider interface and usually is included
 // with all Resource and DataSource implementations.
 type provider struct {
-	// client can contain the upstream provider SDK or HTTP client used to
-	// communicate with the upstream service. Resource and DataSource
-	// implementations can then make calls using this client.
-	//
-	// TODO: If appropriate, implement upstream provider SDK or HTTP client.
-	// client vendorsdk.ExampleClient
+	// client is the SDK used to communicate with the incident.io service.
+	// Resource and DataSource implementations can then make calls using this
+	// client.
+	client *incidentio.Client
 
 	// configured is set to true at the end of the Configure method.
 	// This can be used in Resource and DataSource implementations to verify
@@ -33,8 +32,6 @@ type provider struct {
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
 	version string
-
-	client *incidentio.Client
 }
 
 // providerData can be used to store data from the Terraform configuration.
@@ -51,13 +48,17 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		return
 	}
 
-	// Configuration values are now available.
-	// if data.Example.Null { /* ... */ }
-
 	// If the upstream provider SDK or HTTP client requires configuration, such
 	// as authentication or logging, this is a great opportunity to do so.
 
-	client := incidentio.NewClient(data.ApiKey.Value)
+	var apiKey string
+	if data.ApiKey.Null {
+		apiKey = os.Getenv("INCIDENT_IO_API_KEY")
+	} else {
+		apiKey = data.ApiKey.Value
+	}
+
+	client := incidentio.NewClient(apiKey)
 	p.client = client
 
 	p.configured = true
@@ -79,8 +80,8 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"api_key": {
-				MarkdownDescription: "API key",
-				Required:            true,
+				MarkdownDescription: "API key. You can also set the `INCIDENT_IO_API_KEY` environment variable instead.",
+				Optional:            true,
 				Type:                types.StringType,
 			},
 		},
