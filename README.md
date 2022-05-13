@@ -1,18 +1,46 @@
-# Terraform Provider Scaffolding (Terraform Plugin Framework)
+# Terraform Provider for [incident.io](https://incident.io)
 
-_This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework). The template repository built on the [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk) can be found at [terraform-provider-scaffolding](https://github.com/hashicorp/terraform-provider-scaffolding). See [Which SDK Should I Use?](https://www.terraform.io/docs/plugin/which-sdk.html) in the Terraform documentation for additional information._
+This Terraform provider helps you to configure your [incident.io](https://incident.io) account.
 
-This repository is a *template* for a [Terraform](https://www.terraform.io) provider. It is intended as a starting point for creating Terraform providers, containing:
+1. Get an API key in https://app.incident.io/settings/api-keys
+2. Configure https://incident.io using the provider:
 
-- A resource and a data source (`internal/provider/`),
-- Examples (`examples/`) and generated documentation (`docs/`),
-- Miscellaneous meta files.
+```hcl
+terraform {
+  required_providers {
+    incidentio = {
+      source = "multani/incidentio"
+    }
+  }
+}
 
-These files contain boilerplate code that you will need to edit to create your own Terraform provider. Tutorials for creating Terraform providers can be found on the [HashiCorp Learn](https://learn.hashicorp.com/collections/terraform/providers) platform. _Terraform Plugin Framework specific guides are titled accordingly._
+variable "incidentio_api_key" {
+  description = <<EOF
+An incident.io API key.
 
-Please see the [GitHub template repository documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) for how to create a new repository from this template on GitHub.
+Get one at https://app.incident.io/settings/api-keys
+EOF
+}
 
-Once you've written your provider, you'll want to [publish it on the Terraform Registry](https://www.terraform.io/docs/registry/providers/publishing.html) so that others can use it.
+provider "incidentio" {
+  api_key = var.incidentio_api_key
+}
+
+resource "incidentio_incident_role" "spectator" {
+  name        = "Spectator"
+  short_form  = "spectator"
+  description = "A person that enjoys eating popcorn when things are burning."
+
+  instructions = <<EOF
+- Grab some popcorn
+- Silently watch the incident happening
+- Congrat the other roles once the incident has been resolved
+EOF
+
+  # This role is mostly probably not required, most of the time.
+  required   = false
+}
+```
 
 ## Requirements
 
