@@ -53,27 +53,38 @@ func (t customFieldType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diag
 					tfsdk.RequiresReplace(),
 				},
 			},
-			// TODO: make this optional with a default value
 			"required": {
 				MarkdownDescription: "When this custom field must be set during the incident lifecycle. " +
 					"Must be one of `never`, `before_closure` or `always`.",
-				Required: true,
-				Type:     types.StringType,
+				Type: types.StringType,
 				Validators: []tfsdk.AttributeValidator{
 					isValidCustomFieldRequired(),
+				},
+				Optional: true,
+				Computed: true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					DefaultAttribute(types.String{Value: "never"}),
 				},
 			},
 			// TODO: make this optional with a default value
 			"show_before_closure": {
 				MarkdownDescription: "Whether a custom field should be shown in the incident close modal. If this custom field is required before closure, but no value has been set for it, the field will be shown in the closure modal whatever the value of this setting.",
-				Required:            true,
 				Type:                types.BoolType,
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					DefaultAttribute(types.Bool{Value: false}),
+				},
 			},
 			// TODO: make this optional with a default value
 			"show_before_creation": {
 				MarkdownDescription: "Whether a custom field should be shown in the incident creation modal. This must be true if the field is always required.",
-				Required:            true,
 				Type:                types.BoolType,
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					DefaultAttribute(types.Bool{Value: false}),
+				},
 			},
 		},
 	}, nil

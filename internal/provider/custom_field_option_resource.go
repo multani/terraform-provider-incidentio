@@ -42,11 +42,14 @@ func (t customFieldOptionType) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 				MarkdownDescription: "Human readable name for the custom field option",
 				Required:            true,
 			},
-			// TODO: make this optional with a default value
 			"sort_key": {
 				Type:                types.Int64Type,
 				MarkdownDescription: "Sort key used to order the custom field options correctly",
-				Required:            true,
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					DefaultAttribute(types.Int64{Value: 1000}),
+				},
 			},
 		},
 	}, nil
