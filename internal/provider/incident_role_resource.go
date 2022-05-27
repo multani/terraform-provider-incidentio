@@ -85,7 +85,7 @@ type incidentRole struct {
 func (r incidentRole) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
 	var data incidentRoleData
 
-	diags := req.Config.Get(ctx, &data)
+	diags := req.Plan.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {

@@ -21,11 +21,10 @@ type Client struct {
 
 func NewClient(apiKey string) *Client {
 	c := Client{
-		client:  &http.Client{Timeout: 10 * time.Second},
-		hostURL: HostURL,
+		client:    &http.Client{Timeout: 10 * time.Second},
+		hostURL:   HostURL,
+		apiKey:    apiKey,
 	}
-
-	c.apiKey = apiKey
 
 	return &c
 }
