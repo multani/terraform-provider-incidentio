@@ -2,6 +2,7 @@ package incidentio
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 )
 
@@ -44,4 +45,10 @@ func (e *IncidentIOErrorResponse) Error() string {
 	}
 
 	return builder.String()
+}
+
+// IsErrorStatus returns true if the error is an Incident.io error with the matching status code.
+func IsErrorStatus(err error, statusCode int) bool {
+	var target *IncidentIOErrorResponse
+	return errors.As(err, &target) && target.Status == statusCode
 }

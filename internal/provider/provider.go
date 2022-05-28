@@ -66,8 +66,10 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
-		"incidentio_incident_role": incidentRoleType{},
-		"incidentio_severity":      severityType{},
+		"incidentio_incident_role":       incidentRoleType{},
+		"incidentio_severity":            severityType{},
+		"incidentio_custom_field":        customFieldType{},
+		"incidentio_custom_field_option": customFieldOptionType{},
 	}, nil
 }
 
