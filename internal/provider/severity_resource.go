@@ -117,6 +117,11 @@ func (r severity) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp 
 	severityId := data.Id.Value
 
 	response, err := r.provider.client.Severities().Get(severityId)
+	if incidentio.IsErrorStatus(err, 404) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get severity, got error: %s", err))
 		return
@@ -168,9 +173,12 @@ func (r severity) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, r
 		return
 	}
 
-	severityId := data.Id.Value
+	err := r.provider.client.Severities().Delete(data.Id.Value)
+	if incidentio.IsErrorStatus(err, 404) {
+		// The resource is already gone.
+		return
+	}
 
-	err := r.provider.client.Severities().Delete(severityId)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete severity, got error: %s", err))
 		return

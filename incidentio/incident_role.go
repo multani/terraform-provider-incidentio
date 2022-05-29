@@ -1,12 +1,5 @@
 package incidentio
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
-)
-
 type IncidentRole struct {
 	Name         string `json:"name"`
 	Description  string `json:"description"`
@@ -30,35 +23,21 @@ type IncidentRoleResponse struct {
 
 // IncidentRoles is used to query incident roles
 type IncidentRoles struct {
-	client *Client
+	client  *Client
+	urlPart string
 }
 
 func (c *Client) IncidentRoles() *IncidentRoles {
-	return &IncidentRoles{client: c}
+	return &IncidentRoles{
+		client:  c,
+		urlPart: "incident_roles",
+	}
 }
 
 func (i *IncidentRoles) Get(id string) (*IncidentRoleResponse, error) {
-	if id == "" {
-		return nil, fmt.Errorf("You must specify the ID of the incident role to search")
-	}
-
-	request, err := i.client.newRequest("GET", fmt.Sprintf("/v1/incident_roles/%s", id), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, body, err := i.client.doRequest(request)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("status: %d, body: %s", res.StatusCode, body)
-	}
-
 	response := &IncidentRoleResponse{}
-	err = json.Unmarshal(body, &response)
-	if err != nil {
+
+	if err := i.client.get(i.urlPart, id, &response); err != nil {
 		return nil, err
 	}
 
@@ -66,28 +45,9 @@ func (i *IncidentRoles) Get(id string) (*IncidentRoleResponse, error) {
 }
 
 func (i *IncidentRoles) Create(role IncidentRole) (*IncidentRoleResponse, error) {
-	rb, err := json.Marshal(role)
-	if err != nil {
-		return nil, err
-	}
-
-	request, err := i.client.newRequest("POST", "/v1/incident_roles", strings.NewReader(string(rb)))
-	if err != nil {
-		return nil, err
-	}
-
-	res, body, err := i.client.doRequest(request)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusCreated {
-		return nil, NewErrors(body)
-	}
-
 	response := &IncidentRoleResponse{}
-	err = json.Unmarshal(body, &response)
-	if err != nil {
+
+	if err := i.client.create(i.urlPart, role, &response); err != nil {
 		return nil, err
 	}
 
@@ -95,28 +55,9 @@ func (i *IncidentRoles) Create(role IncidentRole) (*IncidentRoleResponse, error)
 }
 
 func (i *IncidentRoles) Update(id string, role IncidentRole) (*IncidentRoleResponse, error) {
-	rb, err := json.Marshal(role)
-	if err != nil {
-		return nil, err
-	}
-
-	request, err := i.client.newRequest("PUT", fmt.Sprintf("/v1/incident_roles/%s", id), strings.NewReader(string(rb)))
-	if err != nil {
-		return nil, err
-	}
-
-	res, body, err := i.client.doRequest(request)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return nil, NewErrors(body)
-	}
-
 	response := &IncidentRoleResponse{}
-	err = json.Unmarshal(body, &response)
-	if err != nil {
+
+	if err := i.client.update(i.urlPart, id, role, &response); err != nil {
 		return nil, err
 	}
 
@@ -124,16 +65,5 @@ func (i *IncidentRoles) Update(id string, role IncidentRole) (*IncidentRoleRespo
 }
 
 func (i *IncidentRoles) Delete(id string) error {
-	request, err := i.client.newRequest("DELETE", fmt.Sprintf("/v1/incident_roles/%s", id), nil)
-	if err != nil {
-		return err
-	}
-
-	res, body, err := i.client.doRequest(request)
-
-	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusNotFound {
-		return fmt.Errorf("status: %d, body: %s", res.StatusCode, body)
-	}
-
-	return err
+	return i.client.delete(i.urlPart, id)
 }

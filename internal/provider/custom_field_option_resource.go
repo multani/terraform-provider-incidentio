@@ -116,6 +116,7 @@ func (r customFieldOption) Read(ctx context.Context, req tfsdk.ReadResourceReque
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get custom field option, got error: %s", err))
 		return
@@ -167,9 +168,12 @@ func (r customFieldOption) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 		return
 	}
 
-	severityId := data.Id.Value
+	err := r.provider.client.CustomFieldOptions().Delete(data.Id.Value)
+	if incidentio.IsErrorStatus(err, 404) {
+		// The resource is already gone.
+		return
+	}
 
-	err := r.provider.client.CustomFieldOptions().Delete(severityId)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete custom field option, got error: %s", err))
 		return

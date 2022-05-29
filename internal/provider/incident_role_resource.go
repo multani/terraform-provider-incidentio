@@ -125,6 +125,11 @@ func (r incidentRole) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	roleId := data.Id.Value
 
 	response, err := r.provider.client.IncidentRoles().Get(roleId)
+	if incidentio.IsErrorStatus(err, 404) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get incident role, got error: %s", err))
 		return
@@ -180,9 +185,12 @@ func (r incidentRole) Delete(ctx context.Context, req tfsdk.DeleteResourceReques
 		return
 	}
 
-	roleId := data.Id.Value
+	err := r.provider.client.IncidentRoles().Delete(data.Id.Value)
+	if incidentio.IsErrorStatus(err, 404) {
+		// The resource is already gone.
+		return
+	}
 
-	err := r.provider.client.IncidentRoles().Delete(roleId)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete incident role, got error: %s", err))
 		return

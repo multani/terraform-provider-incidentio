@@ -1,6 +1,7 @@
 package incidentio
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -21,9 +22,9 @@ type Client struct {
 
 func NewClient(apiKey string) *Client {
 	c := Client{
-		client:    &http.Client{Timeout: 10 * time.Second},
-		hostURL:   HostURL,
-		apiKey:    apiKey,
+		client:  &http.Client{Timeout: 10 * time.Second},
+		hostURL: HostURL,
+		apiKey:  apiKey,
 	}
 
 	return &c
@@ -82,4 +83,122 @@ func (c *Client) doRequest(req *http.Request) (*http.Response, []byte, error) {
 	}
 
 	return res, body, err
+}
+
+func (c *Client) get(urlPart string, id string, target any) error {
+	if id == "" {
+		return fmt.Errorf("you must specify an ID to get")
+	}
+
+	url := fmt.Sprintf("/v1/%s/%s", urlPart, id)
+
+	request, err := c.newRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	res, body, err := c.doRequest(request)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return NewErrors(body)
+	}
+
+	if err = json.Unmarshal(body, &target); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) create(urlPart string, input any, target any) error {
+	data, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("/v1/%s", urlPart)
+	reader := strings.NewReader(string(data))
+
+	request, err := c.newRequest("POST", url, reader)
+	if err != nil {
+		return err
+	}
+
+	res, body, err := c.doRequest(request)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusCreated {
+		return NewErrors(body)
+	}
+
+	if err = json.Unmarshal(body, &target); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) update(urlPart string, id string, input any, target any) error {
+	if id == "" {
+		return fmt.Errorf("you must specify an ID to update")
+	}
+
+	data, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("/v1/%s/%s", urlPart, id)
+	reader := strings.NewReader(string(data))
+
+	request, err := c.newRequest("PUT", url, reader)
+	if err != nil {
+		return err
+	}
+
+	res, body, err := c.doRequest(request)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return NewErrors(body)
+	}
+
+	if err = json.Unmarshal(body, &target); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) delete(urlPart string, id string) error {
+	if id == "" {
+		return fmt.Errorf("you must specify an ID to delete")
+	}
+
+	url := fmt.Sprintf("/v1/%s/%s", urlPart, id)
+
+	request, err := c.newRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
+
+	res, body, err := c.doRequest(request)
+	if err != nil {
+		return err
+	}
+
+	// most of the APIs return "204 No Content" upon successful deletion
+	// TODO: for some reasons, severities return 204 on successful deletion
+	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusAccepted {
+		return NewErrors(body)
+	}
+
+	return nil
 }
