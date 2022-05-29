@@ -1,10 +1,7 @@
 package incidentio
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
 )
 
 type FieldType string
@@ -71,93 +68,41 @@ type CustomFieldResponse struct {
 
 // CustomFields is used to query custom field options
 type CustomFields struct {
-	client *Client
+	client  *Client
+	urlPart string
 }
 
 func (c *Client) CustomFields() *CustomFields {
-	return &CustomFields{client: c}
+	return &CustomFields{
+		client:  c,
+		urlPart: "custom_fields",
+	}
 }
 
 func (i *CustomFields) Get(id string) (*CustomFieldResponse, error) {
-	if id == "" {
-		return nil, fmt.Errorf("You must specify the ID of the custom field option to get")
-	}
-
-	request, err := i.client.newRequest("GET", fmt.Sprintf("/v1/custom_fields/%s", id), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, body, err := i.client.doRequest(request)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return nil, NewErrors(body)
-	}
-
 	response := &CustomFieldResponse{}
-	err = json.Unmarshal(body, &response)
-	if err != nil {
+
+	if err := i.client.get(i.urlPart, id, &response); err != nil {
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func (i *CustomFields) Create(role CustomField) (*CustomFieldResponse, error) {
-	rb, err := json.Marshal(role)
-	if err != nil {
-		return nil, err
-	}
-
-	request, err := i.client.newRequest("POST", "/v1/custom_fields", strings.NewReader(string(rb)))
-	if err != nil {
-		return nil, err
-	}
-
-	res, body, err := i.client.doRequest(request)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusCreated {
-		return nil, NewErrors(body)
-	}
-
+func (i *CustomFields) Create(field CustomField) (*CustomFieldResponse, error) {
 	response := &CustomFieldResponse{}
-	err = json.Unmarshal(body, &response)
-	if err != nil {
+
+	if err := i.client.create(i.urlPart, field, &response); err != nil {
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func (i *CustomFields) Update(id string, role CustomField) (*CustomFieldResponse, error) {
-	rb, err := json.Marshal(role)
-	if err != nil {
-		return nil, err
-	}
-
-	request, err := i.client.newRequest("PUT", fmt.Sprintf("/v1/custom_fields/%s", id), strings.NewReader(string(rb)))
-	if err != nil {
-		return nil, err
-	}
-
-	res, body, err := i.client.doRequest(request)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return nil, NewErrors(body)
-	}
-
+func (i *CustomFields) Update(id string, field CustomField) (*CustomFieldResponse, error) {
 	response := &CustomFieldResponse{}
-	err = json.Unmarshal(body, &response)
-	if err != nil {
+
+	if err := i.client.update(i.urlPart, id, field, &response); err != nil {
 		return nil, err
 	}
 
@@ -165,16 +110,5 @@ func (i *CustomFields) Update(id string, role CustomField) (*CustomFieldResponse
 }
 
 func (i *CustomFields) Delete(id string) error {
-	request, err := i.client.newRequest("DELETE", fmt.Sprintf("/v1/custom_fields/%s", id), nil)
-	if err != nil {
-		return err
-	}
-
-	res, body, err := i.client.doRequest(request)
-
-	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusNotFound {
-		return fmt.Errorf("status: %d, body: %s", res.StatusCode, body)
-	}
-
-	return err
+	return i.client.delete(i.urlPart, id)
 }
