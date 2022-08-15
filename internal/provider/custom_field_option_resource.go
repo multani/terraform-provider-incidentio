@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -13,9 +15,9 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ tfsdk.ResourceType = customFieldOptionType{}
-var _ tfsdk.Resource = customFieldOption{}
-var _ tfsdk.ResourceWithImportState = customFieldOption{}
+var _ provider.ResourceType = customFieldOptionType{}
+var _ resource.Resource = customFieldOption{}
+var _ resource.ResourceWithImportState = customFieldOption{}
 
 type customFieldOptionType struct{}
 
@@ -29,7 +31,7 @@ func (t customFieldOptionType) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the custom field option",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 			},
 			"custom_field_id": {
@@ -52,7 +54,7 @@ func (t customFieldOptionType) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 	}, nil
 }
 
-func (t customFieldOptionType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t customFieldOptionType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return customFieldOption{
@@ -68,10 +70,10 @@ type customFieldOptionData struct {
 }
 
 type customFieldOption struct {
-	provider provider
+	provider incidentIOProvider
 }
 
-func (r customFieldOption) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r customFieldOption) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data customFieldOptionData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -99,7 +101,7 @@ func (r customFieldOption) Create(ctx context.Context, req tfsdk.CreateResourceR
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r customFieldOption) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r customFieldOption) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data customFieldOptionData
 
 	diags := req.State.Get(ctx, &data)
@@ -131,7 +133,7 @@ func (r customFieldOption) Read(ctx context.Context, req tfsdk.ReadResourceReque
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r customFieldOption) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r customFieldOption) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data customFieldOptionData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -158,7 +160,7 @@ func (r customFieldOption) Update(ctx context.Context, req tfsdk.UpdateResourceR
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r customFieldOption) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r customFieldOption) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data customFieldOptionData
 
 	diags := req.State.Get(ctx, &data)
@@ -180,6 +182,6 @@ func (r customFieldOption) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 	}
 }
 
-func (r customFieldOption) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r customFieldOption) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

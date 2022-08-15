@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -13,9 +15,9 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ tfsdk.ResourceType = customFieldType{}
-var _ tfsdk.Resource = resourceCustomField{}
-var _ tfsdk.ResourceWithImportState = resourceCustomField{}
+var _ provider.ResourceType = customFieldType{}
+var _ resource.Resource = resourceCustomField{}
+var _ resource.ResourceWithImportState = resourceCustomField{}
 
 type customFieldType struct{}
 
@@ -28,7 +30,7 @@ func (t customFieldType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diag
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the custom field",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 				Type: types.StringType,
 			},
@@ -50,7 +52,7 @@ func (t customFieldType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diag
 					isValidCustomFieldFieldType(),
 				},
 				PlanModifiers: []tfsdk.AttributePlanModifier{
-					tfsdk.RequiresReplace(),
+					resource.RequiresReplace(),
 				},
 			},
 			// TODO: make this optional with a default value
@@ -79,7 +81,7 @@ func (t customFieldType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diag
 	}, nil
 }
 
-func (t customFieldType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t customFieldType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return resourceCustomField{
@@ -98,10 +100,10 @@ type customField struct {
 }
 
 type resourceCustomField struct {
-	provider provider
+	provider incidentIOProvider
 }
 
-func (r resourceCustomField) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r resourceCustomField) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data customField
 
 	diags := req.Plan.Get(ctx, &data)
@@ -133,7 +135,7 @@ func (r resourceCustomField) Create(ctx context.Context, req tfsdk.CreateResourc
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r resourceCustomField) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r resourceCustomField) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data customField
 
 	diags := req.State.Get(ctx, &data)
@@ -168,7 +170,7 @@ func (r resourceCustomField) Read(ctx context.Context, req tfsdk.ReadResourceReq
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r resourceCustomField) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r resourceCustomField) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data customField
 
 	diags := req.Plan.Get(ctx, &data)
@@ -199,7 +201,7 @@ func (r resourceCustomField) Update(ctx context.Context, req tfsdk.UpdateResourc
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r resourceCustomField) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r resourceCustomField) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data customField
 
 	diags := req.State.Get(ctx, &data)
@@ -221,6 +223,6 @@ func (r resourceCustomField) Delete(ctx context.Context, req tfsdk.DeleteResourc
 	}
 }
 
-func (r resourceCustomField) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r resourceCustomField) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

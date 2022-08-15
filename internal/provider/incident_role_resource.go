@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -13,9 +15,9 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ tfsdk.ResourceType = incidentRoleType{}
-var _ tfsdk.Resource = incidentRole{}
-var _ tfsdk.ResourceWithImportState = incidentRole{}
+var _ provider.ResourceType = incidentRoleType{}
+var _ resource.Resource = incidentRole{}
+var _ resource.ResourceWithImportState = incidentRole{}
 
 type incidentRoleType struct{}
 
@@ -28,7 +30,7 @@ func (t incidentRoleType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the role",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 				Type: types.StringType,
 			},
@@ -61,7 +63,7 @@ func (t incidentRoleType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 	}, nil
 }
 
-func (t incidentRoleType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t incidentRoleType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return incidentRole{
@@ -79,10 +81,10 @@ type incidentRoleData struct {
 }
 
 type incidentRole struct {
-	provider provider
+	provider incidentIOProvider
 }
 
-func (r incidentRole) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r incidentRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data incidentRoleData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -112,7 +114,7 @@ func (r incidentRole) Create(ctx context.Context, req tfsdk.CreateResourceReques
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r incidentRole) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r incidentRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data incidentRoleData
 
 	diags := req.State.Get(ctx, &data)
@@ -146,7 +148,7 @@ func (r incidentRole) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r incidentRole) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r incidentRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data incidentRoleData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -175,7 +177,7 @@ func (r incidentRole) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r incidentRole) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r incidentRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data incidentRoleData
 
 	diags := req.State.Get(ctx, &data)
@@ -197,6 +199,6 @@ func (r incidentRole) Delete(ctx context.Context, req tfsdk.DeleteResourceReques
 	}
 }
 
-func (r incidentRole) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r incidentRole) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
