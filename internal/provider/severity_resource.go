@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -13,9 +15,9 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ tfsdk.ResourceType = severityType{}
-var _ tfsdk.Resource = severity{}
-var _ tfsdk.ResourceWithImportState = severity{}
+var _ provider.ResourceType = severityType{}
+var _ resource.Resource = severity{}
+var _ resource.ResourceWithImportState = severity{}
 
 type severityType struct{}
 
@@ -28,7 +30,7 @@ func (t severityType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnos
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the severity",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 				Type: types.StringType,
 			},
@@ -57,7 +59,7 @@ func (t severityType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnos
 	}, nil
 }
 
-func (t severityType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t severityType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return severity{
@@ -73,10 +75,10 @@ type severityData struct {
 }
 
 type severity struct {
-	provider provider
+	provider incidentIOProvider
 }
 
-func (r severity) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r severity) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data severityData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -104,7 +106,7 @@ func (r severity) Create(ctx context.Context, req tfsdk.CreateResourceRequest, r
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r severity) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r severity) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data severityData
 
 	diags := req.State.Get(ctx, &data)
@@ -136,7 +138,7 @@ func (r severity) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp 
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r severity) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r severity) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data severityData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -163,7 +165,7 @@ func (r severity) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, r
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r severity) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r severity) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data severityData
 
 	diags := req.State.Get(ctx, &data)
@@ -185,6 +187,6 @@ func (r severity) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, r
 	}
 }
 
-func (r severity) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r severity) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
