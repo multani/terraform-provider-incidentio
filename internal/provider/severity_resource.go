@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,13 +14,32 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = severityType{}
-var _ resource.Resource = severity{}
-var _ resource.ResourceWithImportState = severity{}
+var _ resource.Resource = &SeverityResource{}
+var _ resource.ResourceWithImportState = &SeverityResource{}
 
-type severityType struct{}
+type severityData struct {
+	Id          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Rank        types.Int64  `tfsdk:"rank"`
+}
 
-func (t severityType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type SeverityResource struct {
+	// client is the SDK used to communicate with the incident.io service.
+	// Resource and DataSource implementations can then make calls using this
+	// client.
+	client *incidentio.Client
+}
+
+func NewSeverityResource() resource.Resource {
+	return &SeverityResource{}
+}
+
+func (r *SeverityResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_severity"
+}
+
+func (r *SeverityResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		MarkdownDescription: "Configure a severity",
 
@@ -59,26 +77,27 @@ func (t severityType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnos
 	}, nil
 }
 
-func (t severityType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (r *SeverityResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Provider not yet configured
+	if req.ProviderData == nil {
+		return
+	}
 
-	return severity{
-		provider: provider,
-	}, diags
+	client, ok := req.ProviderData.(*incidentio.Client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *incidentio.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.client = client
 }
 
-type severityData struct {
-	Id          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Rank        types.Int64  `tfsdk:"rank"`
-}
-
-type severity struct {
-	provider incidentIOProvider
-}
-
-func (r severity) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *SeverityResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data severityData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -93,7 +112,7 @@ func (r severity) Create(ctx context.Context, req resource.CreateRequest, resp *
 		Description: data.Description.Value,
 		Rank:        data.Rank.Value,
 	}
-	response, err := r.provider.client.Severities().Create(newSeverity)
+	response, err := r.client.Severities().Create(newSeverity)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create severity, got error: %s", err))
 		return
@@ -106,7 +125,7 @@ func (r severity) Create(ctx context.Context, req resource.CreateRequest, resp *
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r severity) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *SeverityResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data severityData
 
 	diags := req.State.Get(ctx, &data)
@@ -118,7 +137,7 @@ func (r severity) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	severityId := data.Id.Value
 
-	response, err := r.provider.client.Severities().Get(severityId)
+	response, err := r.client.Severities().Get(severityId)
 	if incidentio.IsErrorStatus(err, 404) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -138,7 +157,7 @@ func (r severity) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r severity) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *SeverityResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data severityData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -155,7 +174,7 @@ func (r severity) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		Rank:        data.Rank.Value,
 	}
 
-	_, err := r.provider.client.Severities().Update(severityId, updatedSeverity)
+	_, err := r.client.Severities().Update(severityId, updatedSeverity)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update severity, got error: %s", err))
 		return
@@ -165,7 +184,7 @@ func (r severity) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r severity) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *SeverityResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data severityData
 
 	diags := req.State.Get(ctx, &data)
@@ -175,7 +194,7 @@ func (r severity) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		return
 	}
 
-	err := r.provider.client.Severities().Delete(data.Id.Value)
+	err := r.client.Severities().Delete(data.Id.Value)
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return
@@ -187,6 +206,6 @@ func (r severity) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	}
 }
 
-func (r severity) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *SeverityResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

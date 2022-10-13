@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -77,7 +76,7 @@ func (c *Client) doRequest(req *http.Request) (*http.Response, []byte, error) {
 		fmt.Printf("### RESPONSE:\n%s\n### /RESPONSE\n", string(respDump))
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return res, nil, err
 	}

@@ -2,7 +2,7 @@ package incidentio_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -52,7 +52,7 @@ func TestSeveritiesCreate(t *testing.T) {
 		require.Equal(t, r.Method, "POST")
 
 		severity := &incidentio.Severity{}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		err = json.Unmarshal(body, &severity)
 		require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestSeveritiesUpdate(t *testing.T) {
 		require.Equal(t, r.Method, "PUT")
 
 		severity := &incidentio.Severity{}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		err = json.Unmarshal(body, &severity)
 		require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestSeveritiesDelete(t *testing.T) {
 		require.Equal(t, r.URL.String(), "/v1/severities/id123")
 		require.Equal(t, r.Method, "DELETE")
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		require.Empty(t, body)
 

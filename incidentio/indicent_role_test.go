@@ -2,7 +2,7 @@ package incidentio_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -56,7 +56,7 @@ func TestIncidentRolesCreate(t *testing.T) {
 		require.Equal(t, r.Method, "POST")
 
 		role := &incidentio.IncidentRole{}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		err = json.Unmarshal(body, &role)
 		require.NoError(t, err)
@@ -106,7 +106,7 @@ func TestIncidentRolesUpdate(t *testing.T) {
 		require.Equal(t, r.Method, "PUT")
 
 		role := &incidentio.IncidentRole{}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		err = json.Unmarshal(body, &role)
 		require.NoError(t, err)
@@ -155,7 +155,7 @@ func TestIncidentRolesDelete(t *testing.T) {
 		require.Equal(t, r.URL.String(), "/v1/incident_roles/id123")
 		require.Equal(t, r.Method, "DELETE")
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		require.Empty(t, body)
 

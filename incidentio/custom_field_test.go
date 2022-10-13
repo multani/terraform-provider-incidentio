@@ -2,7 +2,7 @@ package incidentio_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -59,7 +59,7 @@ func TestCustomFieldsCreate(t *testing.T) {
 		require.Equal(t, r.Method, "POST")
 
 		field := &incidentio.CustomField{}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		err = json.Unmarshal(body, &field)
 		require.NoError(t, err)
@@ -109,7 +109,7 @@ func TestCustomFieldsUpdate(t *testing.T) {
 		require.Equal(t, r.Method, "PUT")
 
 		field := &incidentio.CustomField{}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		err = json.Unmarshal(body, &field)
 		require.NoError(t, err)
@@ -158,7 +158,7 @@ func TestCustomFieldsDelete(t *testing.T) {
 		require.Equal(t, r.URL.String(), "/v1/custom_fields/id123")
 		require.Equal(t, r.Method, "DELETE")
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		require.Empty(t, body)
 
