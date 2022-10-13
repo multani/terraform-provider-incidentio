@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,13 +14,35 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = customFieldType{}
-var _ resource.Resource = resourceCustomField{}
-var _ resource.ResourceWithImportState = resourceCustomField{}
+var _ resource.Resource = &CustomFieldResource{}
+var _ resource.ResourceWithImportState = &CustomFieldResource{}
 
-type customFieldType struct{}
+type customField struct {
+	Id                 types.String `tfsdk:"id"`
+	Name               types.String `tfsdk:"name"`
+	Description        types.String `tfsdk:"description"`
+	Required           types.String `tfsdk:"required"`
+	ShowBeforeClosure  types.Bool   `tfsdk:"show_before_closure"`
+	ShowBeforeCreation types.Bool   `tfsdk:"show_before_creation"`
+	FieldType          types.String `tfsdk:"field_type"`
+}
 
-func (t customFieldType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type CustomFieldResource struct {
+	// client is the SDK used to communicate with the incident.io service.
+	// Resource and DataSource implementations can then make calls using this
+	// client.
+	client *incidentio.Client
+}
+
+func NewCustomFieldResource() resource.Resource {
+	return &CustomFieldResource{}
+}
+
+func (r *CustomFieldResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_custom_field"
+}
+
+func (r *CustomFieldResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		MarkdownDescription: "Configure a custom field",
 
@@ -81,29 +102,17 @@ func (t customFieldType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diag
 	}, nil
 }
 
-func (t customFieldType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
-
-	return resourceCustomField{
-		provider: provider,
-	}, diags
+func (r *CustomFieldResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	switch req.ProviderData.(type) {
+	case incidentio.Client:
+		r.client = req.ProviderData.(*incidentio.Client)
+	default:
+		resp.Diagnostics.AddError("Provider Error", "Unexpected type for the incident.io client")
+		return
+	}
 }
 
-type customField struct {
-	Id                 types.String `tfsdk:"id"`
-	Name               types.String `tfsdk:"name"`
-	Description        types.String `tfsdk:"description"`
-	Required           types.String `tfsdk:"required"`
-	ShowBeforeClosure  types.Bool   `tfsdk:"show_before_closure"`
-	ShowBeforeCreation types.Bool   `tfsdk:"show_before_creation"`
-	FieldType          types.String `tfsdk:"field_type"`
-}
-
-type resourceCustomField struct {
-	provider incidentIOProvider
-}
-
-func (r resourceCustomField) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *CustomFieldResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data customField
 
 	diags := req.Plan.Get(ctx, &data)
@@ -122,7 +131,7 @@ func (r resourceCustomField) Create(ctx context.Context, req resource.CreateRequ
 		FieldType:          incidentio.FieldType(data.FieldType.Value),
 	}
 
-	response, err := r.provider.client.CustomFields().Create(newCF)
+	response, err := r.client.CustomFields().Create(newCF)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create custom field, got error: %s", err))
 		return
@@ -135,7 +144,7 @@ func (r resourceCustomField) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r resourceCustomField) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *CustomFieldResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data customField
 
 	diags := req.State.Get(ctx, &data)
@@ -147,7 +156,7 @@ func (r resourceCustomField) Read(ctx context.Context, req resource.ReadRequest,
 
 	id := data.Id.Value
 
-	response, err := r.provider.client.CustomFields().Get(id)
+	response, err := r.client.CustomFields().Get(id)
 	if incidentio.IsErrorStatus(err, 404) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -170,7 +179,7 @@ func (r resourceCustomField) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r resourceCustomField) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *CustomFieldResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data customField
 
 	diags := req.Plan.Get(ctx, &data)
@@ -191,7 +200,7 @@ func (r resourceCustomField) Update(ctx context.Context, req resource.UpdateRequ
 		FieldType:          incidentio.FieldType(data.FieldType.Value),
 	}
 
-	_, err := r.provider.client.CustomFields().Update(cfId, updatedCF)
+	_, err := r.client.CustomFields().Update(cfId, updatedCF)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update custom field, got error: %s", err))
 		return
@@ -201,7 +210,7 @@ func (r resourceCustomField) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r resourceCustomField) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *CustomFieldResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data customField
 
 	diags := req.State.Get(ctx, &data)
@@ -211,7 +220,7 @@ func (r resourceCustomField) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	err := r.provider.client.CustomFields().Delete(data.Id.Value)
+	err := r.client.CustomFields().Delete(data.Id.Value)
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return
@@ -223,6 +232,6 @@ func (r resourceCustomField) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r resourceCustomField) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *CustomFieldResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

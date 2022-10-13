@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,13 +14,34 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = incidentRoleType{}
-var _ resource.Resource = incidentRole{}
-var _ resource.ResourceWithImportState = incidentRole{}
+var _ resource.Resource = &IncidentRoleResource{}
+var _ resource.ResourceWithImportState = &IncidentRoleResource{}
 
-type incidentRoleType struct{}
+type incidentRoleData struct {
+	Id           types.String `tfsdk:"id"`
+	Name         types.String `tfsdk:"name"`
+	Description  types.String `tfsdk:"description"`
+	Required     types.Bool   `tfsdk:"required"`
+	Instructions types.String `tfsdk:"instructions"`
+	ShortForm    types.String `tfsdk:"short_form"`
+}
 
-func (t incidentRoleType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type IncidentRoleResource struct {
+	// client is the SDK used to communicate with the incident.io service.
+	// Resource and DataSource implementations can then make calls using this
+	// client.
+	client *incidentio.Client
+}
+
+func NewIncidentRoleResource() resource.Resource {
+	return &IncidentRoleResource{}
+}
+
+func (r *IncidentRoleResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_incident_role"
+}
+
+func (r *IncidentRoleResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		MarkdownDescription: "Configure an incident role",
 
@@ -63,28 +83,17 @@ func (t incidentRoleType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 	}, nil
 }
 
-func (t incidentRoleType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
-
-	return incidentRole{
-		provider: provider,
-	}, diags
+func (r *IncidentRoleResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	switch req.ProviderData.(type) {
+	case incidentio.Client:
+		r.client = req.ProviderData.(*incidentio.Client)
+	default:
+		resp.Diagnostics.AddError("Provider Error", "Unexpected type for the incident.io client")
+		return
+	}
 }
 
-type incidentRoleData struct {
-	Id           types.String `tfsdk:"id"`
-	Name         types.String `tfsdk:"name"`
-	Description  types.String `tfsdk:"description"`
-	Required     types.Bool   `tfsdk:"required"`
-	Instructions types.String `tfsdk:"instructions"`
-	ShortForm    types.String `tfsdk:"short_form"`
-}
-
-type incidentRole struct {
-	provider incidentIOProvider
-}
-
-func (r incidentRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *IncidentRoleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data incidentRoleData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -101,7 +110,7 @@ func (r incidentRole) Create(ctx context.Context, req resource.CreateRequest, re
 		Instructions: data.Instructions.Value,
 		ShortForm:    data.ShortForm.Value,
 	}
-	response, err := r.provider.client.IncidentRoles().Create(newRole)
+	response, err := r.client.IncidentRoles().Create(newRole)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create incident role, got error: %s", err))
 		return
@@ -114,7 +123,7 @@ func (r incidentRole) Create(ctx context.Context, req resource.CreateRequest, re
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r incidentRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *IncidentRoleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data incidentRoleData
 
 	diags := req.State.Get(ctx, &data)
@@ -126,7 +135,7 @@ func (r incidentRole) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	roleId := data.Id.Value
 
-	response, err := r.provider.client.IncidentRoles().Get(roleId)
+	response, err := r.client.IncidentRoles().Get(roleId)
 	if incidentio.IsErrorStatus(err, 404) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -148,7 +157,7 @@ func (r incidentRole) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r incidentRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *IncidentRoleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data incidentRoleData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -167,7 +176,7 @@ func (r incidentRole) Update(ctx context.Context, req resource.UpdateRequest, re
 		ShortForm:    data.ShortForm.Value,
 	}
 
-	_, err := r.provider.client.IncidentRoles().Update(roleId, updatedRole)
+	_, err := r.client.IncidentRoles().Update(roleId, updatedRole)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update incident role, got error: %s", err))
 		return
@@ -177,7 +186,7 @@ func (r incidentRole) Update(ctx context.Context, req resource.UpdateRequest, re
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r incidentRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *IncidentRoleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data incidentRoleData
 
 	diags := req.State.Get(ctx, &data)
@@ -187,7 +196,7 @@ func (r incidentRole) Delete(ctx context.Context, req resource.DeleteRequest, re
 		return
 	}
 
-	err := r.provider.client.IncidentRoles().Delete(data.Id.Value)
+	err := r.client.IncidentRoles().Delete(data.Id.Value)
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return
@@ -199,6 +208,6 @@ func (r incidentRole) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 }
 
-func (r incidentRole) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *IncidentRoleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,13 +14,32 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = customFieldOptionType{}
-var _ resource.Resource = customFieldOption{}
-var _ resource.ResourceWithImportState = customFieldOption{}
+var _ resource.Resource = &CustomFieldOptionResource{}
+var _ resource.ResourceWithImportState = &CustomFieldOptionResource{}
 
-type customFieldOptionType struct{}
+type customFieldOptionData struct {
+	Id            types.String `tfsdk:"id"`
+	CustomFieldId types.String `tfsdk:"custom_field_id"`
+	Value         types.String `tfsdk:"value"`
+	SortKey       types.Int64  `tfsdk:"sort_key"`
+}
 
-func (t customFieldOptionType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type CustomFieldOptionResource struct {
+	// client is the SDK used to communicate with the incident.io service.
+	// Resource and DataSource implementations can then make calls using this
+	// client.
+	client *incidentio.Client
+}
+
+func NewCustomFieldOptionResource() resource.Resource {
+	return &CustomFieldOptionResource{}
+}
+
+func (r *CustomFieldOptionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_custom_field_option"
+}
+
+func (r *CustomFieldOptionResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		MarkdownDescription: "Configure a custom field option",
 
@@ -54,26 +72,17 @@ func (t customFieldOptionType) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 	}, nil
 }
 
-func (t customFieldOptionType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
-
-	return customFieldOption{
-		provider: provider,
-	}, diags
+func (r *CustomFieldOptionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	switch req.ProviderData.(type) {
+	case incidentio.Client:
+		r.client = req.ProviderData.(*incidentio.Client)
+	default:
+		resp.Diagnostics.AddError("Provider Error", "Unexpected type for the incident.io client")
+		return
+	}
 }
 
-type customFieldOptionData struct {
-	Id            types.String `tfsdk:"id"`
-	CustomFieldId types.String `tfsdk:"custom_field_id"`
-	Value         types.String `tfsdk:"value"`
-	SortKey       types.Int64  `tfsdk:"sort_key"`
-}
-
-type customFieldOption struct {
-	provider incidentIOProvider
-}
-
-func (r customFieldOption) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *CustomFieldOptionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data customFieldOptionData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -88,7 +97,7 @@ func (r customFieldOption) Create(ctx context.Context, req resource.CreateReques
 		Value:         data.Value.Value,
 		SortKey:       data.SortKey.Value,
 	}
-	response, err := r.provider.client.CustomFieldOptions().Create(newCustomFieldOption)
+	response, err := r.client.CustomFieldOptions().Create(newCustomFieldOption)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create custom field option, got error: %s", err))
 		return
@@ -101,7 +110,7 @@ func (r customFieldOption) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r customFieldOption) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *CustomFieldOptionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data customFieldOptionData
 
 	diags := req.State.Get(ctx, &data)
@@ -113,7 +122,7 @@ func (r customFieldOption) Read(ctx context.Context, req resource.ReadRequest, r
 
 	id := data.Id.Value
 
-	response, err := r.provider.client.CustomFieldOptions().Get(id)
+	response, err := r.client.CustomFieldOptions().Get(id)
 	if incidentio.IsErrorStatus(err, 404) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -133,7 +142,7 @@ func (r customFieldOption) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r customFieldOption) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *CustomFieldOptionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data customFieldOptionData
 
 	diags := req.Plan.Get(ctx, &data)
@@ -150,7 +159,7 @@ func (r customFieldOption) Update(ctx context.Context, req resource.UpdateReques
 		SortKey:       data.SortKey.Value,
 	}
 
-	_, err := r.provider.client.CustomFieldOptions().Update(id, updatedCFO)
+	_, err := r.client.CustomFieldOptions().Update(id, updatedCFO)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update custom field option, got error: %s", err))
 		return
@@ -160,7 +169,7 @@ func (r customFieldOption) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r customFieldOption) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *CustomFieldOptionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data customFieldOptionData
 
 	diags := req.State.Get(ctx, &data)
@@ -170,7 +179,7 @@ func (r customFieldOption) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	err := r.provider.client.CustomFieldOptions().Delete(data.Id.Value)
+	err := r.client.CustomFieldOptions().Delete(data.Id.Value)
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return
@@ -182,6 +191,6 @@ func (r customFieldOption) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-func (r customFieldOption) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *CustomFieldOptionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

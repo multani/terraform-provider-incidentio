@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -19,11 +21,6 @@ var _ provider.Provider = &incidentIOProvider{}
 // incidentIOProvider satisfies the provider.Provider interface and usually is included
 // with all Resource and DataSource implementations.
 type incidentIOProvider struct {
-	// client is the SDK used to communicate with the incident.io service.
-	// Resource and DataSource implementations can then make calls using this
-	// client.
-	client *incidentio.Client
-
 	// configured is set to true at the end of the Configure method.
 	// This can be used in Resource and DataSource implementations to verify
 	// that the provider was previously configured.
@@ -38,6 +35,10 @@ type incidentIOProvider struct {
 // providerData can be used to store data from the Terraform configuration.
 type providerData struct {
 	ApiKey types.String `tfsdk:"api_key"`
+}
+
+func (p incidentIOProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "incidentio"
 }
 
 func (p *incidentIOProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -60,22 +61,23 @@ func (p *incidentIOProvider) Configure(ctx context.Context, req provider.Configu
 	}
 
 	client := incidentio.NewClient(apiKey)
-	p.client = client
+	resp.DataSourceData = client
+	resp.ResourceData = client
 
 	p.configured = true
 }
 
-func (p *incidentIOProvider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	return map[string]provider.ResourceType{
-		"incidentio_incident_role":       incidentRoleType{},
-		"incidentio_severity":            severityType{},
-		"incidentio_custom_field":        customFieldType{},
-		"incidentio_custom_field_option": customFieldOptionType{},
-	}, nil
+func (p *incidentIOProvider) Resources(ctx context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
+		NewCustomFieldOptionResource,
+		NewCustomFieldResource,
+		NewIncidentRoleResource,
+		NewSeverityResource,
+	}
 }
 
-func (p *incidentIOProvider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
-	return map[string]provider.DataSourceType{}, nil
+func (p *incidentIOProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{}
 }
 
 func (p *incidentIOProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
