@@ -73,13 +73,10 @@ func (r *CustomFieldOptionResource) GetSchema(ctx context.Context) (tfsdk.Schema
 }
 
 func (r *CustomFieldOptionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	switch req.ProviderData.(type) {
-	case incidentio.Client:
-		r.client = req.ProviderData.(*incidentio.Client)
-	default:
-		resp.Diagnostics.AddError("Provider Error", "Unexpected type for the incident.io client")
+	if req.ProviderData == nil {
 		return
 	}
+	r.client = req.ProviderData.(*incidentio.Client)
 }
 
 func (r *CustomFieldOptionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

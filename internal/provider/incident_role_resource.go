@@ -84,13 +84,11 @@ func (r *IncidentRoleResource) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 }
 
 func (r *IncidentRoleResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	switch req.ProviderData.(type) {
-	case incidentio.Client:
-		r.client = req.ProviderData.(*incidentio.Client)
-	default:
-		resp.Diagnostics.AddError("Provider Error", "Unexpected type for the incident.io client")
+	// Provider not yet configured
+	if req.ProviderData == nil {
 		return
 	}
+	r.client = req.ProviderData.(*incidentio.Client)
 }
 
 func (r *IncidentRoleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
