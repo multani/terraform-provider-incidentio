@@ -44,11 +44,11 @@ func (v stringLengthBetweenValidator) Validate(ctx context.Context, req tfsdk.Va
 		return
 	}
 
-	if str.Unknown || str.Null {
+	if str.IsUnknown() || str.IsNull() {
 		return
 	}
 
-	strLen := len(str.Value)
+	strLen := len(str.ValueString())
 
 	if strLen < v.Min || strLen > v.Max {
 		resp.Diagnostics.AddAttributeError(
@@ -83,10 +83,10 @@ func (v fieldTypeValidator) Validate(ctx context.Context, req tfsdk.ValidateAttr
 		return
 	}
 
-	if str.Unknown || str.Null {
+	if str.IsUnknown() || str.IsNull() {
 		return
 	}
-	_, err := incidentio.ParseFieldType(str.Value)
+	_, err := incidentio.ParseFieldType(str.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(
@@ -121,10 +121,10 @@ func (v fieldRequirementValidator) Validate(ctx context.Context, req tfsdk.Valid
 		return
 	}
 
-	if str.Unknown || str.Null {
+	if str.IsUnknown() || str.IsNull() {
 		return
 	}
-	_, err := incidentio.ParseFieldRequirement(str.Value)
+	_, err := incidentio.ParseFieldRequirement(str.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(
