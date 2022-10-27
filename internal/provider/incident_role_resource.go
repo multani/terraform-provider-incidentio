@@ -114,11 +114,11 @@ func (r *IncidentRoleResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	newRole := incidentio.IncidentRole{
-		Name:         data.Name.Value,
-		Description:  data.Description.Value,
-		Required:     data.Required.Value,
-		Instructions: data.Instructions.Value,
-		ShortForm:    data.ShortForm.Value,
+		Name:         data.Name.ValueString(),
+		Description:  data.Description.ValueString(),
+		Required:     data.Required.ValueBool(),
+		Instructions: data.Instructions.ValueString(),
+		ShortForm:    data.ShortForm.ValueString(),
 	}
 	response, err := r.client.IncidentRoles().Create(newRole)
 	if err != nil {
@@ -143,7 +143,7 @@ func (r *IncidentRoleResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	roleId := data.Id.Value
+	roleId := data.Id.ValueString()
 
 	response, err := r.client.IncidentRoles().Get(roleId)
 	if incidentio.IsErrorStatus(err, 404) {
@@ -177,13 +177,13 @@ func (r *IncidentRoleResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	roleId := data.Id.Value
+	roleId := data.Id.ValueString()
 	updatedRole := incidentio.IncidentRole{
-		Name:         data.Name.Value,
-		Description:  data.Description.Value,
-		Required:     data.Required.Value,
-		Instructions: data.Instructions.Value,
-		ShortForm:    data.ShortForm.Value,
+		Name:         data.Name.ValueString(),
+		Description:  data.Description.ValueString(),
+		Required:     data.Required.ValueBool(),
+		Instructions: data.Instructions.ValueString(),
+		ShortForm:    data.ShortForm.ValueString(),
 	}
 
 	_, err := r.client.IncidentRoles().Update(roleId, updatedRole)
@@ -206,7 +206,7 @@ func (r *IncidentRoleResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	err := r.client.IncidentRoles().Delete(data.Id.Value)
+	err := r.client.IncidentRoles().Delete(data.Id.ValueString())
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return

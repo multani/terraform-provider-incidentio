@@ -108,9 +108,9 @@ func (r *SeverityResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	newSeverity := incidentio.Severity{
-		Name:        data.Name.Value,
-		Description: data.Description.Value,
-		Rank:        data.Rank.Value,
+		Name:        data.Name.ValueString(),
+		Description: data.Description.ValueString(),
+		Rank:        data.Rank.ValueInt64(),
 	}
 	response, err := r.client.Severities().Create(newSeverity)
 	if err != nil {
@@ -135,7 +135,7 @@ func (r *SeverityResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	severityId := data.Id.Value
+	severityId := data.Id.ValueString()
 
 	response, err := r.client.Severities().Get(severityId)
 	if incidentio.IsErrorStatus(err, 404) {
@@ -167,11 +167,11 @@ func (r *SeverityResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	severityId := data.Id.Value
+	severityId := data.Id.ValueString()
 	updatedSeverity := incidentio.Severity{
-		Name:        data.Name.Value,
-		Description: data.Description.Value,
-		Rank:        data.Rank.Value,
+		Name:        data.Name.ValueString(),
+		Description: data.Description.ValueString(),
+		Rank:        data.Rank.ValueInt64(),
 	}
 
 	_, err := r.client.Severities().Update(severityId, updatedSeverity)
@@ -194,7 +194,7 @@ func (r *SeverityResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	err := r.client.Severities().Delete(data.Id.Value)
+	err := r.client.Severities().Delete(data.Id.ValueString())
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return

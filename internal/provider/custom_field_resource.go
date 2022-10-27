@@ -133,12 +133,12 @@ func (r *CustomFieldResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	newCF := incidentio.CustomField{
-		Name:               data.Name.Value,
-		Description:        data.Description.Value,
-		Required:           incidentio.FieldRequirement(data.Required.Value),
-		ShowBeforeClosure:  data.ShowBeforeClosure.Value,
-		ShowBeforeCreation: data.ShowBeforeCreation.Value,
-		FieldType:          incidentio.FieldType(data.FieldType.Value),
+		Name:               data.Name.ValueString(),
+		Description:        data.Description.ValueString(),
+		Required:           incidentio.FieldRequirement(data.Required.ValueString()),
+		ShowBeforeClosure:  data.ShowBeforeClosure.ValueBool(),
+		ShowBeforeCreation: data.ShowBeforeCreation.ValueBool(),
+		FieldType:          incidentio.FieldType(data.FieldType.ValueString()),
 	}
 
 	response, err := r.client.CustomFields().Create(newCF)
@@ -164,7 +164,7 @@ func (r *CustomFieldResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	id := data.Id.Value
+	id := data.Id.ValueString()
 
 	response, err := r.client.CustomFields().Get(id)
 	if incidentio.IsErrorStatus(err, 404) {
@@ -199,15 +199,15 @@ func (r *CustomFieldResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	cfId := data.Id.Value
+	cfId := data.Id.ValueString()
 
 	updatedCF := incidentio.CustomField{
-		Name:               data.Name.Value,
-		Description:        data.Description.Value,
-		Required:           incidentio.FieldRequirement(data.Required.Value),
-		ShowBeforeClosure:  data.ShowBeforeClosure.Value,
-		ShowBeforeCreation: data.ShowBeforeCreation.Value,
-		FieldType:          incidentio.FieldType(data.FieldType.Value),
+		Name:               data.Name.ValueString(),
+		Description:        data.Description.ValueString(),
+		Required:           incidentio.FieldRequirement(data.Required.ValueString()),
+		ShowBeforeClosure:  data.ShowBeforeClosure.ValueBool(),
+		ShowBeforeCreation: data.ShowBeforeCreation.ValueBool(),
+		FieldType:          incidentio.FieldType(data.FieldType.ValueString()),
 	}
 
 	_, err := r.client.CustomFields().Update(cfId, updatedCF)
@@ -230,7 +230,7 @@ func (r *CustomFieldResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	err := r.client.CustomFields().Delete(data.Id.Value)
+	err := r.client.CustomFields().Delete(data.Id.ValueString())
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return
