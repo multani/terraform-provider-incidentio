@@ -126,7 +126,7 @@ func (r *IncidentRoleResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	data.Id = types.String{Value: response.IncidentRole.Id}
+	data.Id = types.StringValue(response.IncidentRole.Id)
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID=%s", response.IncidentRole.Id))
 
 	diags = resp.State.Set(ctx, &data)
@@ -156,12 +156,12 @@ func (r *IncidentRoleResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	data.Id = types.String{Value: response.IncidentRole.Id}
-	data.Name = types.String{Value: response.IncidentRole.Name}
-	data.Description = types.String{Value: response.IncidentRole.Description}
-	data.Required = types.Bool{Value: response.IncidentRole.Required}
-	data.Instructions = types.String{Value: response.IncidentRole.Instructions}
-	data.ShortForm = types.String{Value: response.IncidentRole.ShortForm}
+	data.Id = types.StringValue(response.IncidentRole.Id)
+	data.Name = types.StringValue(response.IncidentRole.Name)
+	data.Description = types.StringValue(response.IncidentRole.Description)
+	data.Required = types.BoolValue(response.IncidentRole.Required)
+	data.Instructions = types.StringValue(response.IncidentRole.Instructions)
+	data.ShortForm = types.StringValue(response.IncidentRole.ShortForm)
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)

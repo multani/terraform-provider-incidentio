@@ -118,7 +118,7 @@ func (r *SeverityResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	data.Id = types.String{Value: response.Severity.Id}
+	data.Id = types.StringValue(response.Severity.Id)
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID=%s", response.Severity.Id))
 
 	diags = resp.State.Set(ctx, &data)
@@ -148,10 +148,10 @@ func (r *SeverityResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	data.Id = types.String{Value: response.Severity.Id}
-	data.Name = types.String{Value: response.Severity.Name}
-	data.Description = types.String{Value: response.Severity.Description}
-	data.Rank = types.Int64{Value: response.Severity.Rank}
+	data.Id = types.StringValue(response.Severity.Id)
+	data.Name = types.StringValue(response.Severity.Name)
+	data.Description = types.StringValue(response.Severity.Description)
+	data.Rank = types.Int64Value(response.Severity.Rank)
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)

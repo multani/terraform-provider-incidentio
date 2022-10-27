@@ -113,7 +113,7 @@ func (r *CustomFieldOptionResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomFieldOption.Id}
+	data.Id = types.StringValue(response.CustomFieldOption.Id)
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID=%s", response.CustomFieldOption.Id))
 
 	diags = resp.State.Set(ctx, &data)
@@ -143,10 +143,10 @@ func (r *CustomFieldOptionResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomFieldOption.Id}
-	data.CustomFieldId = types.String{Value: response.CustomFieldOption.CustomFieldId}
-	data.Value = types.String{Value: response.CustomFieldOption.Value}
-	data.SortKey = types.Int64{Value: response.CustomFieldOption.SortKey}
+	data.Id = types.StringValue(response.CustomFieldOption.Id)
+	data.CustomFieldId = types.StringValue(response.CustomFieldOption.CustomFieldId)
+	data.Value = types.StringValue(response.CustomFieldOption.Value)
+	data.SortKey = types.Int64Value(response.CustomFieldOption.SortKey)
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)

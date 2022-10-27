@@ -147,7 +147,7 @@ func (r *CustomFieldResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomField.Id}
+	data.Id = types.StringValue(response.CustomField.Id)
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID=%s", response.CustomField.Id))
 
 	diags = resp.State.Set(ctx, &data)
@@ -177,13 +177,13 @@ func (r *CustomFieldResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomField.Id}
-	data.Name = types.String{Value: response.CustomField.Name}
-	data.Description = types.String{Value: response.CustomField.Description}
-	data.Required = types.String{Value: string(response.CustomField.Required)}
-	data.ShowBeforeClosure = types.Bool{Value: response.CustomField.ShowBeforeClosure}
-	data.ShowBeforeCreation = types.Bool{Value: response.CustomField.ShowBeforeCreation}
-	data.FieldType = types.String{Value: string(response.CustomField.FieldType)}
+	data.Id = types.StringValue(response.CustomField.Id)
+	data.Name = types.StringValue(response.CustomField.Name)
+	data.Description = types.StringValue(response.CustomField.Description)
+	data.Required = types.StringValue(string(response.CustomField.Required))
+	data.ShowBeforeClosure = types.BoolValue(response.CustomField.ShowBeforeClosure)
+	data.ShowBeforeCreation = types.BoolValue(response.CustomField.ShowBeforeCreation)
+	data.FieldType = types.StringValue(string(response.CustomField.FieldType))
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
