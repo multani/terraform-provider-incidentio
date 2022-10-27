@@ -83,10 +83,13 @@ To compile the provider, run `go install`. This will build the provider and put 
 
 To generate or update documentation, run `go generate`.
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
+In order to run the full suite of Acceptance tests, run `make testacc`. You will
+need a valid incident.io API key that you can get from
+https://app.incident.io/settings/api-keys and export it as the `INCIDENT_IO_API_KEY` environment variable.
 
 *Note:* Acceptance tests create real resources, and often cost money to run.
 
 ```shell
+export INCIDENT_IO_API_KEY="xxx"
 make testacc
 ```

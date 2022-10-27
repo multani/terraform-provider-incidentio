@@ -20,10 +20,10 @@ func TestAccSeverityResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccSeverityResourceConfig("sev 1", 10),
+				Config: testAccSeverityResourceConfig("sev 1", 21),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("incidentio_severity.test", "name", "sev 1"),
-					resource.TestCheckResourceAttr("incidentio_severity.test", "rank", "10"),
+					resource.TestCheckResourceAttr("incidentio_severity.test", "rank", "21"),
 				),
 			},
 			// ImportState testing
@@ -39,10 +39,10 @@ func TestAccSeverityResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccSeverityResourceConfig("sev 2", 20),
+				Config: testAccSeverityResourceConfig("sev 2", 22),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("incidentio_severity.test", "name", "sev 2"),
-					resource.TestCheckResourceAttr("incidentio_severity.test", "rank", "20"),
+					resource.TestCheckResourceAttr("incidentio_severity.test", "rank", "22"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
