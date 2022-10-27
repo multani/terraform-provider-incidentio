@@ -133,12 +133,12 @@ func (r *CustomFieldResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	newCF := incidentio.CustomField{
-		Name:               data.Name.Value,
-		Description:        data.Description.Value,
-		Required:           incidentio.FieldRequirement(data.Required.Value),
-		ShowBeforeClosure:  data.ShowBeforeClosure.Value,
-		ShowBeforeCreation: data.ShowBeforeCreation.Value,
-		FieldType:          incidentio.FieldType(data.FieldType.Value),
+		Name:               data.Name.ValueString(),
+		Description:        data.Description.ValueString(),
+		Required:           incidentio.FieldRequirement(data.Required.ValueString()),
+		ShowBeforeClosure:  data.ShowBeforeClosure.ValueBool(),
+		ShowBeforeCreation: data.ShowBeforeCreation.ValueBool(),
+		FieldType:          incidentio.FieldType(data.FieldType.ValueString()),
 	}
 
 	response, err := r.client.CustomFields().Create(newCF)
@@ -147,7 +147,7 @@ func (r *CustomFieldResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomField.Id}
+	data.Id = types.StringValue(response.CustomField.Id)
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID=%s", response.CustomField.Id))
 
 	diags = resp.State.Set(ctx, &data)
@@ -164,7 +164,7 @@ func (r *CustomFieldResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	id := data.Id.Value
+	id := data.Id.ValueString()
 
 	response, err := r.client.CustomFields().Get(id)
 	if incidentio.IsErrorStatus(err, 404) {
@@ -177,13 +177,13 @@ func (r *CustomFieldResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomField.Id}
-	data.Name = types.String{Value: response.CustomField.Name}
-	data.Description = types.String{Value: response.CustomField.Description}
-	data.Required = types.String{Value: string(response.CustomField.Required)}
-	data.ShowBeforeClosure = types.Bool{Value: response.CustomField.ShowBeforeClosure}
-	data.ShowBeforeCreation = types.Bool{Value: response.CustomField.ShowBeforeCreation}
-	data.FieldType = types.String{Value: string(response.CustomField.FieldType)}
+	data.Id = types.StringValue(response.CustomField.Id)
+	data.Name = types.StringValue(response.CustomField.Name)
+	data.Description = types.StringValue(response.CustomField.Description)
+	data.Required = types.StringValue(string(response.CustomField.Required))
+	data.ShowBeforeClosure = types.BoolValue(response.CustomField.ShowBeforeClosure)
+	data.ShowBeforeCreation = types.BoolValue(response.CustomField.ShowBeforeCreation)
+	data.FieldType = types.StringValue(string(response.CustomField.FieldType))
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -199,15 +199,15 @@ func (r *CustomFieldResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	cfId := data.Id.Value
+	cfId := data.Id.ValueString()
 
 	updatedCF := incidentio.CustomField{
-		Name:               data.Name.Value,
-		Description:        data.Description.Value,
-		Required:           incidentio.FieldRequirement(data.Required.Value),
-		ShowBeforeClosure:  data.ShowBeforeClosure.Value,
-		ShowBeforeCreation: data.ShowBeforeCreation.Value,
-		FieldType:          incidentio.FieldType(data.FieldType.Value),
+		Name:               data.Name.ValueString(),
+		Description:        data.Description.ValueString(),
+		Required:           incidentio.FieldRequirement(data.Required.ValueString()),
+		ShowBeforeClosure:  data.ShowBeforeClosure.ValueBool(),
+		ShowBeforeCreation: data.ShowBeforeCreation.ValueBool(),
+		FieldType:          incidentio.FieldType(data.FieldType.ValueString()),
 	}
 
 	_, err := r.client.CustomFields().Update(cfId, updatedCF)
@@ -230,7 +230,7 @@ func (r *CustomFieldResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	err := r.client.CustomFields().Delete(data.Id.Value)
+	err := r.client.CustomFields().Delete(data.Id.ValueString())
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return

@@ -61,10 +61,10 @@ func (p *IncidentIOProvider) Configure(ctx context.Context, req provider.Configu
 	// as authentication or logging, this is a great opportunity to do so.
 
 	var apiKey string
-	if data.ApiKey.Null {
+	if data.ApiKey.IsNull() {
 		apiKey = os.Getenv("INCIDENT_IO_API_KEY")
 	} else {
-		apiKey = data.ApiKey.Value
+		apiKey = data.ApiKey.ValueString()
 	}
 
 	client := incidentio.NewClient(apiKey)

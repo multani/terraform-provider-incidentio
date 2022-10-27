@@ -114,11 +114,11 @@ func (r *IncidentRoleResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	newRole := incidentio.IncidentRole{
-		Name:         data.Name.Value,
-		Description:  data.Description.Value,
-		Required:     data.Required.Value,
-		Instructions: data.Instructions.Value,
-		ShortForm:    data.ShortForm.Value,
+		Name:         data.Name.ValueString(),
+		Description:  data.Description.ValueString(),
+		Required:     data.Required.ValueBool(),
+		Instructions: data.Instructions.ValueString(),
+		ShortForm:    data.ShortForm.ValueString(),
 	}
 	response, err := r.client.IncidentRoles().Create(newRole)
 	if err != nil {
@@ -126,7 +126,7 @@ func (r *IncidentRoleResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	data.Id = types.String{Value: response.IncidentRole.Id}
+	data.Id = types.StringValue(response.IncidentRole.Id)
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID=%s", response.IncidentRole.Id))
 
 	diags = resp.State.Set(ctx, &data)
@@ -143,7 +143,7 @@ func (r *IncidentRoleResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	roleId := data.Id.Value
+	roleId := data.Id.ValueString()
 
 	response, err := r.client.IncidentRoles().Get(roleId)
 	if incidentio.IsErrorStatus(err, 404) {
@@ -156,12 +156,12 @@ func (r *IncidentRoleResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	data.Id = types.String{Value: response.IncidentRole.Id}
-	data.Name = types.String{Value: response.IncidentRole.Name}
-	data.Description = types.String{Value: response.IncidentRole.Description}
-	data.Required = types.Bool{Value: response.IncidentRole.Required}
-	data.Instructions = types.String{Value: response.IncidentRole.Instructions}
-	data.ShortForm = types.String{Value: response.IncidentRole.ShortForm}
+	data.Id = types.StringValue(response.IncidentRole.Id)
+	data.Name = types.StringValue(response.IncidentRole.Name)
+	data.Description = types.StringValue(response.IncidentRole.Description)
+	data.Required = types.BoolValue(response.IncidentRole.Required)
+	data.Instructions = types.StringValue(response.IncidentRole.Instructions)
+	data.ShortForm = types.StringValue(response.IncidentRole.ShortForm)
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -177,13 +177,13 @@ func (r *IncidentRoleResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	roleId := data.Id.Value
+	roleId := data.Id.ValueString()
 	updatedRole := incidentio.IncidentRole{
-		Name:         data.Name.Value,
-		Description:  data.Description.Value,
-		Required:     data.Required.Value,
-		Instructions: data.Instructions.Value,
-		ShortForm:    data.ShortForm.Value,
+		Name:         data.Name.ValueString(),
+		Description:  data.Description.ValueString(),
+		Required:     data.Required.ValueBool(),
+		Instructions: data.Instructions.ValueString(),
+		ShortForm:    data.ShortForm.ValueString(),
 	}
 
 	_, err := r.client.IncidentRoles().Update(roleId, updatedRole)
@@ -206,7 +206,7 @@ func (r *IncidentRoleResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	err := r.client.IncidentRoles().Delete(data.Id.Value)
+	err := r.client.IncidentRoles().Delete(data.Id.ValueString())
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return

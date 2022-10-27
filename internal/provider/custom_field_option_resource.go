@@ -103,9 +103,9 @@ func (r *CustomFieldOptionResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	newCustomFieldOption := incidentio.CustomFieldOption{
-		CustomFieldId: data.CustomFieldId.Value,
-		Value:         data.Value.Value,
-		SortKey:       data.SortKey.Value,
+		CustomFieldId: data.CustomFieldId.ValueString(),
+		Value:         data.Value.ValueString(),
+		SortKey:       data.SortKey.ValueInt64(),
 	}
 	response, err := r.client.CustomFieldOptions().Create(newCustomFieldOption)
 	if err != nil {
@@ -113,7 +113,7 @@ func (r *CustomFieldOptionResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomFieldOption.Id}
+	data.Id = types.StringValue(response.CustomFieldOption.Id)
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID=%s", response.CustomFieldOption.Id))
 
 	diags = resp.State.Set(ctx, &data)
@@ -130,7 +130,7 @@ func (r *CustomFieldOptionResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	id := data.Id.Value
+	id := data.Id.ValueString()
 
 	response, err := r.client.CustomFieldOptions().Get(id)
 	if incidentio.IsErrorStatus(err, 404) {
@@ -143,10 +143,10 @@ func (r *CustomFieldOptionResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	data.Id = types.String{Value: response.CustomFieldOption.Id}
-	data.CustomFieldId = types.String{Value: response.CustomFieldOption.CustomFieldId}
-	data.Value = types.String{Value: response.CustomFieldOption.Value}
-	data.SortKey = types.Int64{Value: response.CustomFieldOption.SortKey}
+	data.Id = types.StringValue(response.CustomFieldOption.Id)
+	data.CustomFieldId = types.StringValue(response.CustomFieldOption.CustomFieldId)
+	data.Value = types.StringValue(response.CustomFieldOption.Value)
+	data.SortKey = types.Int64Value(response.CustomFieldOption.SortKey)
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -162,11 +162,11 @@ func (r *CustomFieldOptionResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	id := data.Id.Value
+	id := data.Id.ValueString()
 	updatedCFO := incidentio.CustomFieldOption{
-		CustomFieldId: data.CustomFieldId.Value,
-		Value:         data.Value.Value,
-		SortKey:       data.SortKey.Value,
+		CustomFieldId: data.CustomFieldId.ValueString(),
+		Value:         data.Value.ValueString(),
+		SortKey:       data.SortKey.ValueInt64(),
 	}
 
 	_, err := r.client.CustomFieldOptions().Update(id, updatedCFO)
@@ -189,7 +189,7 @@ func (r *CustomFieldOptionResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	err := r.client.CustomFieldOptions().Delete(data.Id.Value)
+	err := r.client.CustomFieldOptions().Delete(data.Id.ValueString())
 	if incidentio.IsErrorStatus(err, 404) {
 		// The resource is already gone.
 		return
