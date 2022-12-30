@@ -4,8 +4,9 @@ resource "incidentio_custom_field" "test" {
 
   #required = "never" # never, before_closure
 
-  show_before_closure  = true
-  show_before_creation = true
+  #show_before_closure  = true
+  #show_before_creation = true
+  #show_before_update = true
 
   field_type = "multi_select"
 
