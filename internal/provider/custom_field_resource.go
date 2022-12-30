@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/multani/terraform-provider-incidentio/incidentio"
@@ -42,64 +44,57 @@ func (r *CustomFieldResource) Metadata(ctx context.Context, req resource.Metadat
 	resp.TypeName = req.ProviderTypeName + "_custom_field"
 }
 
-func (r *CustomFieldResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (r *CustomFieldResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Configure a custom field",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the custom field",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				Type: types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "Human readable name of the custom field",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the custom field",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"field_type": {
+			"field_type": schema.StringAttribute{
 				MarkdownDescription: "The type of the custom field",
 				Required:            true,
-				Type:                types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					isValidCustomFieldFieldType(),
 				},
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			// TODO: make this optional with a default value
-			"required": {
+			"required": schema.StringAttribute{
 				MarkdownDescription: "When this custom field must be set during the incident lifecycle. " +
 					"Must be one of `never`, `before_closure` or `always`.",
 				Required: true,
-				Type:     types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					isValidCustomFieldRequired(),
 				},
 			},
 			// TODO: make this optional with a default value
-			"show_before_closure": {
+			"show_before_closure": schema.BoolAttribute{
 				MarkdownDescription: "Whether a custom field should be shown in the incident close modal. If this custom field is required before closure, but no value has been set for it, the field will be shown in the closure modal whatever the value of this setting.",
 				Required:            true,
-				Type:                types.BoolType,
 			},
 			// TODO: make this optional with a default value
-			"show_before_creation": {
+			"show_before_creation": schema.BoolAttribute{
 				MarkdownDescription: "Whether a custom field should be shown in the incident creation modal. This must be true if the field is always required.",
 				Required:            true,
-				Type:                types.BoolType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *CustomFieldResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

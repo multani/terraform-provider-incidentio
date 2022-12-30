@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/multani/terraform-provider-incidentio/incidentio"
@@ -32,13 +33,13 @@ func (v stringLengthBetweenValidator) MarkdownDescription(ctx context.Context) s
 }
 
 // Validate runs the main validation logic of the validator, reading configuration data out of `req` and updating `resp` with diagnostics.
-func (v stringLengthBetweenValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+func (v stringLengthBetweenValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
 	// types.String must be the attr.Value produced by the attr.Type in the schema for this attribute
 	// for generic validators, use
 	// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-framework/tfsdk#ConvertValue
 	// to convert into a known type.
 	var str types.String
-	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &str)
+	diags := tfsdk.ValueAs(ctx, req.ConfigValue, &str)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
@@ -52,11 +53,10 @@ func (v stringLengthBetweenValidator) Validate(ctx context.Context, req tfsdk.Va
 
 	if strLen < v.Min || strLen > v.Max {
 		resp.Diagnostics.AddAttributeError(
-			req.AttributePath,
+			req.Path,
 			"Invalid String Length",
 			fmt.Sprintf("String length must be between %d and %d, got: %d.", v.Min, v.Max, strLen),
 		)
-
 		return
 	}
 }
@@ -75,9 +75,9 @@ func (v fieldTypeValidator) MarkdownDescription(ctx context.Context) string {
 	return "field type must be one of `single_select`, `multi_select`, `text`, `link` or `numeric`"
 }
 
-func (v fieldTypeValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+func (v fieldTypeValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
 	var str types.String
-	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &str)
+	diags := tfsdk.ValueAs(ctx, req.ConfigValue, &str)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
@@ -86,15 +86,14 @@ func (v fieldTypeValidator) Validate(ctx context.Context, req tfsdk.ValidateAttr
 	if str.IsUnknown() || str.IsNull() {
 		return
 	}
-	_, err := incidentio.ParseFieldType(str.ValueString())
 
+	_, err := incidentio.ParseFieldType(str.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(
-			req.AttributePath,
+			req.Path,
 			"Invalid field type",
 			"A field type must be one of 'single_select', 'multi_select', 'text', 'link' or 'numeric'.",
 		)
-
 		return
 	}
 }
@@ -113,9 +112,9 @@ func (v fieldRequirementValidator) MarkdownDescription(ctx context.Context) stri
 	return "Field requirement must be one of `never`, `before_closure` or `always`"
 }
 
-func (v fieldRequirementValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+func (v fieldRequirementValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
 	var str types.String
-	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &str)
+	diags := tfsdk.ValueAs(ctx, req.ConfigValue, &str)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
@@ -124,15 +123,14 @@ func (v fieldRequirementValidator) Validate(ctx context.Context, req tfsdk.Valid
 	if str.IsUnknown() || str.IsNull() {
 		return
 	}
-	_, err := incidentio.ParseFieldRequirement(str.ValueString())
 
+	_, err := incidentio.ParseFieldRequirement(str.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddAttributeError(
-			req.AttributePath,
+			req.Path,
 			"Invalid field requirement",
 			"A field requirement must be one of 'never', 'before_closure' or 'always'.",
 		)
-
 		return
 	}
 }

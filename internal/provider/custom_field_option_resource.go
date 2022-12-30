@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/multani/terraform-provider-incidentio/incidentio"
@@ -39,37 +40,33 @@ func (r *CustomFieldOptionResource) Metadata(ctx context.Context, req resource.M
 	resp.TypeName = req.ProviderTypeName + "_custom_field_option"
 }
 
-func (r *CustomFieldOptionResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (r *CustomFieldOptionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Configure a custom field option",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:                types.StringType,
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the custom field option",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"custom_field_id": {
-				Type:                types.StringType,
+			"custom_field_id": schema.StringAttribute{
 				MarkdownDescription: "ID of the custom field this option belongs to",
 				Required:            true,
 			},
-			"value": {
-				Type:                types.StringType,
+			"value": schema.StringAttribute{
 				MarkdownDescription: "Human readable name for the custom field option",
 				Required:            true,
 			},
 			// TODO: make this optional with a default value
-			"sort_key": {
-				Type:                types.Int64Type,
+			"sort_key": schema.Int64Attribute{
 				MarkdownDescription: "Sort key used to order the custom field options correctly",
 				Required:            true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *CustomFieldOptionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
