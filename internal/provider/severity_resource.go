@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/multani/terraform-provider-incidentio/incidentio"
@@ -39,42 +41,38 @@ func (r *SeverityResource) Metadata(ctx context.Context, req resource.MetadataRe
 	resp.TypeName = req.ProviderTypeName + "_severity"
 }
 
-func (r *SeverityResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (r *SeverityResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Configure a severity",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the severity",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				Type: types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "Human readable name of the severity",
 				Required:            true,
-				Type:                types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringLengthBetween(0, 50),
 				},
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the severity",
 				Required:            true,
-				Type:                types.StringType,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringLengthBetween(0, 1000),
 				},
 			},
-			"rank": {
+			"rank": schema.Int64Attribute{
 				MarkdownDescription: "Rank to help sort severities (lower numbers are less severe)",
 				Required:            true,
-				Type:                types.Int64Type,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *SeverityResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

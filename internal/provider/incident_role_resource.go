@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/multani/terraform-provider-incidentio/incidentio"
@@ -41,46 +42,40 @@ func (r *IncidentRoleResource) Metadata(ctx context.Context, req resource.Metada
 	resp.TypeName = req.ProviderTypeName + "_incident_role"
 }
 
-func (r *IncidentRoleResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (r *IncidentRoleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "Configure an incident role",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Unique identifier for the role",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				Type: types.StringType,
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				MarkdownDescription: "Human readable name of the incident role",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				MarkdownDescription: "Describes the purpose of the role",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"required": {
+			"required": schema.BoolAttribute{
 				MarkdownDescription: "Whether incident require this role to be set",
 				Required:            true,
-				Type:                types.BoolType,
 			},
-			"instructions": {
+			"instructions": schema.StringAttribute{
 				MarkdownDescription: "Provided to whoever is nominated for the role",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"short_form": {
+			"short_form": schema.StringAttribute{
 				MarkdownDescription: "Short human readable name for Slack",
 				Required:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *IncidentRoleResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
