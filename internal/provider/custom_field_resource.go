@@ -26,6 +26,7 @@ type customField struct {
 	Required           types.String `tfsdk:"required"`
 	ShowBeforeClosure  types.Bool   `tfsdk:"show_before_closure"`
 	ShowBeforeCreation types.Bool   `tfsdk:"show_before_creation"`
+	ShowBeforeUpdate   types.Bool   `tfsdk:"show_before_update"`
 	FieldType          types.String `tfsdk:"field_type"`
 }
 
@@ -102,6 +103,14 @@ func (r *CustomFieldResource) Schema(ctx context.Context, req resource.SchemaReq
 					boolDefaultValue(true),
 				},
 			},
+			"show_before_update": schema.BoolAttribute{
+				MarkdownDescription: "Whether a custom field should be shown in the incident update modal.",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolDefaultValue(true),
+				},
+			},
 		},
 	}
 }
@@ -142,6 +151,7 @@ func (r *CustomFieldResource) Create(ctx context.Context, req resource.CreateReq
 		Required:           incidentio.FieldRequirement(data.Required.ValueString()),
 		ShowBeforeClosure:  data.ShowBeforeClosure.ValueBool(),
 		ShowBeforeCreation: data.ShowBeforeCreation.ValueBool(),
+		ShowBeforeUpdate:   data.ShowBeforeUpdate.ValueBool(),
 		FieldType:          incidentio.FieldType(data.FieldType.ValueString()),
 	}
 
@@ -187,6 +197,7 @@ func (r *CustomFieldResource) Read(ctx context.Context, req resource.ReadRequest
 	data.Required = types.StringValue(string(response.CustomField.Required))
 	data.ShowBeforeClosure = types.BoolValue(response.CustomField.ShowBeforeClosure)
 	data.ShowBeforeCreation = types.BoolValue(response.CustomField.ShowBeforeCreation)
+	data.ShowBeforeUpdate = types.BoolValue(response.CustomField.ShowBeforeUpdate)
 	data.FieldType = types.StringValue(string(response.CustomField.FieldType))
 
 	diags = resp.State.Set(ctx, &data)
@@ -211,6 +222,7 @@ func (r *CustomFieldResource) Update(ctx context.Context, req resource.UpdateReq
 		Required:           incidentio.FieldRequirement(data.Required.ValueString()),
 		ShowBeforeClosure:  data.ShowBeforeClosure.ValueBool(),
 		ShowBeforeCreation: data.ShowBeforeCreation.ValueBool(),
+		ShowBeforeUpdate:   data.ShowBeforeUpdate.ValueBool(),
 		FieldType:          incidentio.FieldType(data.FieldType.ValueString()),
 	}
 

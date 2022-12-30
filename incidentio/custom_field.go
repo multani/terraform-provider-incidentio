@@ -50,6 +50,7 @@ type CustomField struct {
 	Required           FieldRequirement    `json:"required"`
 	ShowBeforeClosure  bool                `json:"show_before_closure"`
 	ShowBeforeCreation bool                `json:"show_before_creation"`
+	ShowBeforeUpdate   bool                `json:"show_before_update"`
 	FieldType          FieldType           `json:"field_type"`
 	Options            []CustomFieldOption `json:"options"`
 }

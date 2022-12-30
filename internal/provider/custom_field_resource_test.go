@@ -20,6 +20,7 @@ func testAccCustomFieldResourceConfig(name string, required string, field_type s
 
 		show_before_closure  = true
 		show_before_creation = true
+		show_before_update   = true
 
 		field_type = "%s"
 	}

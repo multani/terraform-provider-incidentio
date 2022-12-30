@@ -18,6 +18,7 @@ func testAccCustomFieldOptionResourceConfig(field_type string, value string, sor
 
 		show_before_closure  = true
 		show_before_creation = true
+		show_before_update   = false
 	}
 
 	resource "incidentio_custom_field_option" "test" {
