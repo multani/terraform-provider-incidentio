@@ -20,6 +20,9 @@ Configure a custom field
 - `description` (String) Description of the custom field
 - `field_type` (String) The type of the custom field
 - `name` (String) Human readable name of the custom field
+
+### Optional
+
 - `required` (String) When this custom field must be set during the incident lifecycle. Must be one of `never`, `before_closure` or `always`.
 - `show_before_closure` (Boolean) Whether a custom field should be shown in the incident close modal. If this custom field is required before closure, but no value has been set for it, the field will be shown in the closure modal whatever the value of this setting.
 - `show_before_creation` (Boolean) Whether a custom field should be shown in the incident creation modal. This must be true if the field is always required.

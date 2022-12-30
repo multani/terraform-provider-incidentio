@@ -18,8 +18,11 @@ Configure a custom field option
 ### Required
 
 - `custom_field_id` (String) ID of the custom field this option belongs to
-- `sort_key` (Number) Sort key used to order the custom field options correctly
 - `value` (String) Human readable name for the custom field option
+
+### Optional
+
+- `sort_key` (Number) Sort key used to order the custom field options correctly
 
 ### Read-Only
 

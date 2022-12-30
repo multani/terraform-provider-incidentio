@@ -2,7 +2,7 @@ resource "incidentio_custom_field" "test" {
   name        = "Affected Team"
   description = "The team which was responsible for resolving this incident."
 
-  required = "always" # never, before_closure
+  #required = "never" # never, before_closure
 
   show_before_closure  = true
   show_before_creation = true
@@ -37,6 +37,6 @@ resource "incidentio_custom_field_option" "test" {
 
   custom_field_id = incidentio_custom_field.test.id
 
-  value    = each.key
-  sort_key = each.value
+  value = each.key
+  #sort_key = each.value
 }

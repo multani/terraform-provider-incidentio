@@ -60,10 +60,13 @@ func (r *CustomFieldOptionResource) Schema(ctx context.Context, req resource.Sch
 				MarkdownDescription: "Human readable name for the custom field option",
 				Required:            true,
 			},
-			// TODO: make this optional with a default value
 			"sort_key": schema.Int64Attribute{
 				MarkdownDescription: "Sort key used to order the custom field options correctly",
-				Required:            true,
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.Int64{
+					int64DefaultValue(10),
+				},
 			},
 		},
 	}
