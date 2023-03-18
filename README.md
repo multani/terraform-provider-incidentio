@@ -1,3 +1,6 @@
+Use the official [incident.io](https://registry.terraform.io/providers/incident-io/incident/latest) provider instead!
+
+
 # Terraform Provider for [incident.io](https://incident.io)
 
 This Terraform provider helps you to configure your [incident.io](https://incident.io) account.
